@@ -1,48 +1,64 @@
-﻿// -------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Author: 3dapi (https://github.com/3dapi)
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+﻿
 using Vortice.Mathematics;
+using System.Drawing;
 
 class GameMain : G2AppBase
 {
-	public override System.Drawing.Size ScreenSize => GameGlobal.ScreenSize;
-	public override string GameName => GameGlobal.GameName;
+    public override System.Drawing.Size ScreenSize => GameGlobal.ScreenSize;
+    public override string GameName => GameGlobal.GameName;
 
-	protected override void Initialize()
-	{
-		//---------------------------------------
-		// 게임 관련 객체를 생성합니다.
-		//---------------------------------------
-	}
+    private G2Texture? mainImage;
+    private float imageWidth;
+    private float imageHeight;
 
-	protected override void Update()
-	{
-		double elapsed = TotalTime;
+    protected override void Initialize()
+    {
+        string imagePath =
+            @"C:\Users\Windows11\26031001_choisea_GameCraft\src\game name\resource\img_ui\main.png";
 
-		this.ClearColor = new Color4(
-			red: (float)(Math.Sin(elapsed) * 0.5 + 0.5),
-			green: (float)(Math.Sin(elapsed + Math.PI / 2.0) * 0.5 + 0.5),
-			blue: (float)(Math.Sin(elapsed + Math.PI) * 0.5 + 0.5),
-			alpha: 1.0f);
+        mainImage = new G2Texture(imagePath);
 
-		//---------------------------------------
-		// 게임 관련 객체를 갱신합니다.
-		//---------------------------------------
-	}
+        // 원본 이미지 크기 가져오기
+        using (var image = Image.FromFile(imagePath))
+        {
+            imageWidth = image.Width;
+            imageHeight = image.Height;
+        }
+    }
 
-	protected override void Render()
-	{
-		//---------------------------------------
-		// 게임 관련 객체를 렌더링 합니다.
-		//---------------------------------------
-	}
+    protected override void Update()
+    {
+        ClearColor = new Color4(0f, 0f, 0f, 1f);
+    }
 
-	public override void Dispose()
-	{
-		base.Dispose();
-		//---------------------------------------
-		// 게임 관련 객체를 해제합니다.
-		//---------------------------------------
-	}
+    protected override void Render()
+    {
+        if (mainImage == null)
+            return;
+
+        // 화면 크기에 맞게 비율 계산
+        float scaleX = (float)ScreenSize.Width / imageWidth;
+        float scaleY = (float)ScreenSize.Height / imageHeight;
+
+        // 이미지가 잘리지 않도록 작은 배율 선택
+        float scale = Math.Min(scaleX, scaleY);
+
+        float width = imageWidth * scale;
+        float height = imageHeight * scale;
+
+        // 화면 중앙 정렬
+        float x = (ScreenSize.Width - width) / 2f;
+        float y = (ScreenSize.Height - height) / 2f;
+
+        var destination = new Rect(x, y, width, height);
+        var source = new Rect(0, 0, imageWidth, imageHeight);
+
+        mainImage.Draw(destination, source);
+    }
+
+    public override void Dispose()
+    {
+        mainImage?.Dispose();
+        base.Dispose();
+    }
 }
