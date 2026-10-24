@@ -206,17 +206,16 @@ class GameMain : G2AppBase
     // 게임 초기화
     protected override void Initialize()
     {
-        string projectPath =
-            @"C:\Users\Windows11\26031001_choisea_GameCraft";
+        string resourcePath = Path.Combine(
+            AppContext.BaseDirectory,
+            "resource");
 
         string uiFolder = Path.Combine(
-            projectPath,
-            "resource",
+            resourcePath,
             "img_ui");
 
         playImageFolder = Path.Combine(
-            projectPath,
-            "resource",
+            resourcePath,
             "img_play");
 
         string mainPath =
