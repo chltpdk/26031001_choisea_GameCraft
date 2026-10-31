@@ -27,6 +27,7 @@ abstract class G2AppBase : IDisposable
 
 	public float ScaleX => (float)_mainForm.ClientSize.Width / ScreenSize.Width;
 	public float ScaleY => (float)_mainForm.ClientSize.Height / ScreenSize.Height;
+	protected Cursor WindowCursor { get => _mainForm.Cursor; set => _mainForm.Cursor = value; }
 
 	public static float ScreenScaleX => Instance?.ScaleX ?? throw new InvalidOperationException("ScreenScaleX::G2AppBase instance is not initialized.");
 	public static float ScreenScaleY => Instance?.ScaleY ?? throw new InvalidOperationException("ScreenScaleY::G2AppBase instance is not initialized.");

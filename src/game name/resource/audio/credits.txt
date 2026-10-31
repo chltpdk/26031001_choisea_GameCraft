@@ -1,0 +1,11 @@
+DEAD ZONE — After the Sirens
+Original synthesized instrumental intro theme created for this project.
+80 BPM, E minor, 16 bars / 48 seconds, seamless stereo loop.
+Low heartbeat percussion, pulsing bass, dark pads, and sparse bell melody.
+No third-party recordings, samples, or soundfonts used.
+
+Created with a custom C# synthesizer. The generator was removed during
+project cleanup; the finished WAV is retained as a game resource.
+
+The main menu fades in at 65% volume. START and focus loss fade out.
+Returning to the main menu restarts the theme. Gameplay has no intro music.

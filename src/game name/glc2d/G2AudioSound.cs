@@ -74,6 +74,11 @@ class G2AudioSound : IG2Audio
 		return _sourceVoice.State.BuffersQueued > 0;
 	}
 
+	public void SetVolume(float volume)
+	{
+		_sourceVoice.SetVolume(Math.Clamp(volume, 0f, 1f));
+	}
+
 	public void Stop()
 	{
 		_sourceVoice.Stop();

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "melee_lv1",
+    "name": "단거리 Lv1 · 배회자",
+    "type": "melee",
+    "level": 1,
+    "file": "melee_lv1.png",
+    "width": 96,
+    "height": 96,
+    "visibleHeight": 62,
+    "feetAnchor": [
+      48,
+      88
+    ],
+    "facing": "down",
+    "frames": 1
+  },
+  {
+    "id": "melee_lv2",
+    "name": "단거리 Lv2 · 습격자",
+    "type": "melee",
+    "level": 2,
+    "file": "melee_lv2.png",
+    "width": 96,
+    "height": 96,
+    "visibleHeight": 70,
+    "feetAnchor": [
+      48,
+      88
+    ],
+    "facing": "down",
+    "frames": 1
+  },
+  {
+    "id": "melee_lv3",
+    "name": "단거리 Lv3 · 파괴자",
+    "type": "melee",
+    "level": 3,
+    "file": "melee_lv3.png",
+    "width": 96,
+    "height": 96,
+    "visibleHeight": 80,
+    "feetAnchor": [
+      48,
+      88
+    ],
+    "facing": "down",
+    "frames": 1
+  },
+  {
+    "id": "ranged_lv1",
+    "name": "장거리 Lv1 · 침뱉는 좀비",
+    "type": "ranged",
+    "level": 1,
+    "file": "ranged_lv1.png",
+    "width": 96,
+    "height": 96,
+    "visibleHeight": 62,
+    "feetAnchor": [
+      48,
+      88
+    ],
+    "facing": "down",
+    "frames": 1
+  },
+  {
+    "id": "ranged_lv2",
+    "name": "장거리 Lv2 · 독주머니 좀비",
+    "type": "ranged",
+    "level": 2,
+    "file": "ranged_lv2.png",
+    "width": 96,
+    "height": 96,
+    "visibleHeight": 70,
+    "feetAnchor": [
+      48,
+      88
+    ],
+    "facing": "down",
+    "frames": 1
+  },
+  {
+    "id": "ranged_lv3",
+    "name": "장거리 Lv3 · 맹독 분사자",
+    "type": "ranged",
+    "level": 3,
+    "file": "ranged_lv3.png",
+    "width": 96,
+    "height": 96,
+    "visibleHeight": 80,
+    "feetAnchor": [
+      48,
+      88
+    ],
+    "facing": "down",
+    "frames": 1
+  }
+]
