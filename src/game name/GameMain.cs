@@ -284,7 +284,14 @@ class GameMain : G2AppBase
         // 플레이어 초기화
         ResetPlayer();
 
-        InitializeIntroMusic(resourcePath);
+        InitializeMusic(resourcePath);
+        gunshotSound = LoadSound(resourcePath, "gunshot.wav");
+        gunshotSound?.SetVolume(0.22f);
+        for (int i = 0; i < zombieDeathSounds.Length; i++)
+        {
+            zombieDeathSounds[i] = LoadSound(resourcePath, "zombie_death.wav");
+            zombieDeathSounds[i]?.SetVolume(0.18f);
+        }
 
         lastFrameTime =
             frameTimer.Elapsed.TotalSeconds;
@@ -620,7 +627,7 @@ class GameMain : G2AppBase
 
         lastFrameTime = now;
 
-        UpdateIntroMusic(dt);
+        UpdateMusic(dt);
         UpdateGameCursor();
 
         if (isPlaying)
@@ -1034,6 +1041,8 @@ class GameMain : G2AppBase
     {
         introMusic?.Dispose();
         introMusic = null;
+        gameplayMusic?.Dispose();
+        gameplayMusic = null;
         mainImage?.Dispose();
         startImage?.Dispose();
         quitImage?.Dispose();
@@ -1066,6 +1075,8 @@ class GameMain : G2AppBase
 
 
     private readonly ZombieWaveSystem zombieWaves = new();
+    private readonly G2AudioSound?[] zombieDeathSounds = new G2AudioSound?[3];
+    private int nextZombieDeathSound;
     private readonly PlayerSurvival playerSurvival = new();
     private readonly G2Texture?[,] zombieImages = new G2Texture?[3, 4];
     private readonly List<RectangleF> zombieBlockers = new();
@@ -1077,6 +1088,7 @@ class GameMain : G2AppBase
 
     private void InitializeZombies()
     {
+        zombieWaves.ZombieKilled += PlayZombieDeathSound;
         for (int kind = 0; kind < 3; kind++)
         for (int frame = 0; frame < 4; frame++)
             zombieImages[kind, frame] = new G2Texture(Path.Combine(playImageFolder, "zombies", "walking",
@@ -1190,8 +1202,21 @@ class GameMain : G2AppBase
         }
     }
 
+    private void PlayZombieDeathSound()
+    {
+        // Let nearby kills overlap without cutting off the previous short cry.
+        zombieDeathSounds[nextZombieDeathSound]?.Play();
+        nextZombieDeathSound = (nextZombieDeathSound + 1) % zombieDeathSounds.Length;
+    }
+
     private void DisposeZombies()
     {
+        zombieWaves.ZombieKilled -= PlayZombieDeathSound;
+        for (int i = 0; i < zombieDeathSounds.Length; i++)
+        {
+            zombieDeathSounds[i]?.Dispose();
+            zombieDeathSounds[i] = null;
+        }
         foreach (G2Texture? image in zombieImages)
             image?.Dispose();
         waveFont?.Dispose();
@@ -1205,6 +1230,7 @@ class GameMain : G2AppBase
 
 
     private readonly CombatSystem combat = new();
+    private G2AudioSound? gunshotSound;
     private ID2D1SolidColorBrush? bulletBrush;
     private ID2D1SolidColorBrush? impactBrush;
 
@@ -1251,7 +1277,8 @@ class GameMain : G2AppBase
             _ => new(0, 14)
         };
         isShooting = validAim && trigger;
-        combat.Update(dt, isShooting, origin, origin + muzzleOffset, aim, zombieWaves, zombieBlockers);
+        if (combat.Update(dt, isShooting, origin, origin + muzzleOffset, aim, zombieWaves, zombieBlockers))
+            gunshotSound?.Play();
     }
 
     private void DrawCombat(float scale, float offsetX, float offsetY)
@@ -1284,6 +1311,8 @@ class GameMain : G2AppBase
 
     private void DisposeCombat()
     {
+        gunshotSound?.Dispose();
+        gunshotSound = null;
         bulletBrush?.Dispose();
         impactBrush?.Dispose();
         combat.Reset();
@@ -1463,39 +1492,71 @@ class GameMain : G2AppBase
 
 
     private G2AudioSound? introMusic;
+    private G2AudioSound? gameplayMusic;
     private float introMusicVolume;
+    private float gameplayMusicVolume;
     private const float IntroMusicVolume = 0.65f;
+    private const float GameplayMusicVolume = 0.55f;
+    // The WAV opens with an intro-themed bridge; repeat only the following 15-second section.
+    private const uint GameplayMusicLoopBeginSample = 204750;
 
-    private void InitializeIntroMusic(string resourcePath)
+    private void InitializeMusic(string resourcePath)
     {
         // A machine without an audio output can still run the game.
         if (G2AudioContext.Instance?.Audio == null) return;
+        introMusic = LoadSound(resourcePath, "dead_zone_intro.wav");
+        gameplayMusic = LoadSound(resourcePath, "dead_zone_apocalypse.wav", GameplayMusicLoopBeginSample);
+    }
+
+    private static G2AudioSound? LoadSound(string resourcePath, string fileName, uint loopBeginSample = 0)
+    {
+        if (G2AudioContext.Instance?.Audio == null) return null;
+        G2AudioSound? music = null;
         try
         {
-            introMusic = new G2AudioSound(Path.Combine(resourcePath, "audio", "dead_zone_intro.wav"));
-            introMusic.SetVolume(0);
+            music = new G2AudioSound(Path.Combine(resourcePath, "audio", fileName), loopBeginSample);
+            music.SetVolume(0);
+            return music;
         }
         catch (Exception ex)
         {
-            introMusic?.Dispose();
-            introMusic = null;
-            Debug.WriteLine($"Intro music unavailable: {ex.Message}");
+            music?.Dispose();
+            Debug.WriteLine($"Audio unavailable ({fileName}): {ex.Message}");
+            return null;
         }
     }
 
-    private void UpdateIntroMusic(float dt)
+    private void UpdateMusic(float dt)
     {
-        if (introMusic == null) return;
-        float target = !isPlaying && IsGameFocused() ? IntroMusicVolume : 0;
-        if (target > 0 && !introMusic.IsPlaying()) introMusic.Play(isLooping: true);
+        bool focused = IsGameFocused();
+        FadeMusic(introMusic, ref introMusicVolume,
+            !isPlaying && focused ? IntroMusicVolume : 0, IntroMusicVolume, dt);
 
-        // One-second fade in, 0.65-second fade out on START or focus loss.
-        float step = IntroMusicVolume * dt / (target > introMusicVolume ? 1f : 0.65f);
-        introMusicVolume = target > introMusicVolume
-            ? Math.Min(target, introMusicVolume + step)
-            : Math.Max(target, introMusicVolume - step);
-        introMusic.SetVolume(introMusicVolume);
-        if (introMusicVolume == 0 && introMusic.IsPlaying()) introMusic.Stop();
+        // Let the menu intro finish fading before the apocalypse track begins.
+        float gameplayTarget = isPlaying && focused && introMusicVolume == 0
+            ? GameplayMusicVolume * (playerSurvival.IsGameOver ? 0.4f : isPaused ? 0.3f : 1f)
+            : 0;
+        FadeMusic(gameplayMusic, ref gameplayMusicVolume,
+            gameplayTarget, GameplayMusicVolume, dt);
+    }
+
+    private static void FadeMusic(G2AudioSound? music, ref float volume,
+        float target, float maximumVolume, float dt)
+    {
+        if (music == null)
+        {
+            volume = 0;
+            return;
+        }
+        if (target > 0 && !music.IsPlaying()) music.Play(isLooping: true);
+
+        // One-second fade in and 0.65-second fade out, including focus loss.
+        float step = maximumVolume * dt / (target > volume ? 1f : 0.65f);
+        volume = target > volume
+            ? Math.Min(target, volume + step)
+            : Math.Max(target, volume - step);
+        music.SetVolume(volume);
+        if (volume == 0 && music.IsPlaying()) music.Stop();
     }
 
 
@@ -1569,6 +1630,7 @@ internal sealed class ZombieWaveSystem
 
     public IReadOnlyList<ZombieEnemy> Zombies => zombies;
     public int KillCount { get; private set; }
+    public event Action? ZombieKilled;
     public bool Hit(ZombieEnemy zombie)
     {
         if (zombie.Health <= 0 || !zombies.Contains(zombie)) return false;
@@ -1582,6 +1644,7 @@ internal sealed class ZombieWaveSystem
         if (!zombies.Remove(zombie)) return false;
         zombie.Health = 0;
         KillCount++;
+        ZombieKilled?.Invoke();
         return true;
     }
     public double ElapsedSeconds { get; private set; }
@@ -1847,10 +1910,11 @@ internal sealed class CombatSystem
 
     public void Reset() { bullets.Clear(); impacts.Clear(); cooldown = 0; }
 
-    public void Update(float dt, bool trigger, Vector2 origin, Vector2 muzzle, Vector2 aim,
+    public bool Update(float dt, bool trigger, Vector2 origin, Vector2 muzzle, Vector2 aim,
         ZombieWaveSystem waves, IReadOnlyList<RectangleF> blockers)
     {
-        if (!float.IsFinite(dt) || dt <= 0) return;
+        if (!float.IsFinite(dt) || dt <= 0) return false;
+        bool fired = false;
         cooldown = Math.Max(0, cooldown - dt);
         for (int i = impacts.Count - 1; i >= 0; i--)
         {
@@ -1860,6 +1924,8 @@ internal sealed class CombatSystem
         Vector2 delta = aim - muzzle;
         if (trigger && cooldown <= 0 && float.IsFinite(delta.X) && float.IsFinite(delta.Y) && delta.LengthSquared() > 0.01f)
         {
+            // A shot still makes a sound when it immediately hits a wall at the muzzle.
+            fired = true;
             cooldown = FireInterval;
             // 총구가 벽/좀비 너머에 놓여도 발사 직전 구간의 충돌을 생략하지 않습니다.
             if (!ResolveImpact(origin, muzzle, waves, blockers))
@@ -1875,6 +1941,7 @@ internal sealed class CombatSystem
             bullet.Age += dt;
             if (hit || bullet.Age >= BulletLifetime) bullets.RemoveAt(i);
         }
+        return fired;
     }
 
     private bool ResolveImpact(Vector2 from, Vector2 to, ZombieWaveSystem waves, IReadOnlyList<RectangleF> blockers)
@@ -2024,5 +2091,6 @@ internal sealed class EnemyAttackSystem
         return true;
     }
 }
+
 
 

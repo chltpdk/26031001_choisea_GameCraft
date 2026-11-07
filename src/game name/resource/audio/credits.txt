@@ -9,3 +9,27 @@ project cleanup; the finished WAV is retained as a game resource.
 
 The main menu fades in at 65% volume. START and focus loss fade out.
 Returning to the main menu restarts the theme. Gameplay has no intro music.
+
+DEAD ZONE — Apocalypse (dead_zone_apocalypse.wav)
+Original synthesized gameplay music created for this project.
+Stereo PCM (44.1 kHz / 16 bit), 19.642857 seconds including a one-time musical opening.
+The repeated 6-second intro excerpt has been removed; the track starts with the arranged bridge.
+Related bell, bass and minor-chord phrases connect it through 96 and 112 BPM
+to the established bright 128 BPM gameplay passage. No opening filter sweep or volume swell.
+The preserved E-C-D-B gameplay passage repeats for 15 seconds from sample 204750;
+the intro-themed opening does not repeat during uninterrupted gameplay.
+No third-party recordings, samples, or soundfonts used. Only the finished WAV is retained.
+Starts after the menu intro fades out on START; loops during gameplay.
+Pause and game over reduce its volume; focus loss fades it out.
+
+Gunshot (gunshot.wav)
+Original synthesized short gunshot: 125 ms mono PCM, 44.1 kHz / 16 bit.
+Soft crack, low body and brief mechanical tail; no external recordings or samples.
+Plays at 22% volume on each actual shot, including immediate muzzle impacts.
+The effect is shorter than the 160 ms firing interval to keep automatic fire clean.
+
+Zombie death (zombie_death.wav)
+Original synthesized low death groan: 360 ms mono PCM, 44.1 kHz / 16 bit.
+Falling low vocal register, irregular vocal fry and a rough breath tail replace the high squeal.
+No external recordings or samples. Plays quietly at 18% volume only on a confirmed kill.
+Three playback voices allow quick successive deaths to overlap without cutting off the cry.

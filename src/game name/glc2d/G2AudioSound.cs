@@ -22,8 +22,9 @@ class G2AudioSound : IG2Audio
 	private WavData? _wavData;
 	private readonly AudioBuffer _playBuffer;
 	private readonly IXAudio2SourceVoice _sourceVoice;
+	private readonly uint _loopBeginSample;
 
-	public G2AudioSound(string filePath)
+	public G2AudioSound(string filePath, uint loopBeginSample = 0)
 	{
 		if (string.IsNullOrWhiteSpace(filePath))
 		{
@@ -59,12 +60,19 @@ class G2AudioSound : IG2Audio
 		}
 		_playBuffer = new AudioBuffer(_wavData.Buffer.AudioDataPointer, _wavData.Buffer.AudioBytes, _wavData.Buffer.Flags);
 		_sourceVoice = audio.CreateSourceVoice(_wavData.Format);
+		// A one-time musical opening can precede the repeating gameplay section.
+		uint sampleCount = _wavData.Buffer.AudioBytes / (uint)_wavData.Format.BlockAlign;
+		_loopBeginSample = loopBeginSample < sampleCount ? loopBeginSample : 0;
 	}
 
 	public void Play(bool isLooping = false)
 	{
 		Stop();
 		_playBuffer.LoopCount = isLooping ? (uint)XAudio2.LoopInfinite : 0;
+		_playBuffer.LoopBegin = isLooping ? _loopBeginSample : 0;
+		_playBuffer.LoopLength = isLooping && _loopBeginSample > 0
+			? _wavData!.Buffer.AudioBytes / (uint)_wavData.Format.BlockAlign - _loopBeginSample
+			: 0;
 		_sourceVoice.SubmitSourceBuffer(_playBuffer);
 		_sourceVoice.Start();
 	}
